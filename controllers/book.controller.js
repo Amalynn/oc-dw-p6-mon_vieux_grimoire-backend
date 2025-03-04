@@ -1,30 +1,59 @@
 const Book = require('../models/Book');
 
+/**
+ * Get a book following a specific ID
+ * @route GET /api/books/:id 
+ * @access Public  
+ */
+exports.getOneBook = async (req, res) => {
+    try {
+        const book = await Book.findOne({_id: req.params.id}) ;
+        return res.status(200).json(book)
+    } catch (error) {
+        return res.status(404).json({error})
+    }
+};
 
-exports.getOneBook = (req, res,next) = {
+/**
+ * Get tree books having the best ranking
+ * @route GET /api/books/bestrating
+ * @access Public  
+ */
+exports.getBestRatingBooks = async (req, res) => {
+    try {
+        const bestBooks = await Book.find({}).sort({averageRating: -1}).limit(3)
+        return res.status(200).json(bestBooks)        
+    } catch (error) {
+        return res.status(500).json({error})
+    }
+};
+
+exports.createBook = (req, res,next) => {
 
 };
 
-exports.getBestRatingBooks = (req, res,next) = {
+exports.updateBook = (req, res,next) => {
 
 };
 
-exports.createBook = (req, res,next) = {
+exports.deleteBook = (req, res,next) => {
 
 };
 
-exports.updateBook = (req, res,next) = {
+exports.createRatingBook = (req, res,next) => {
 
 };
 
-exports.deleteBook = (req, res,next) = {
-
-};
-
-exports.createRatingBook = (req, res,next) = {
-
-};
-
-exports.getAllBooks = (req, res, next) = {
-    
+/**
+ * Get all books from the database
+ * @route GET /api/books
+ * @access Public  
+ */
+exports.getAllBooks = async (req, res) => {    
+    try {
+        const allBooks = await Book.find({}) ;
+        return res.status(200).json(allBooks)
+    } catch (error) {
+        return res.status(400).json({error})
+    }     
 };
