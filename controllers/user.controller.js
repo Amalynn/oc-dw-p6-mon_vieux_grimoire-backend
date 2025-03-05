@@ -1,6 +1,12 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
+/**
+ * Validate the email format
+ * @param {string} email -  An email to validate
+ * @return boolean   
+ */
 const isValidEmail = (email) => {    
     const emailRegex = /[a-z0-9._-]+@[a-z0-9._-]+\.[a-z0-9._-]+/;
     return emailRegex.test(email);
@@ -8,7 +14,7 @@ const isValidEmail = (email) => {
 
 /**
  * Register a new user
- * @route POT /api/auth/signup
+ * @route POST /api/auth/signup
  * @access Public  
  */
 exports.signup = async (req, res) => {
@@ -44,6 +50,34 @@ exports.signup = async (req, res) => {
     }            
 };
 
-exports.login = (req, res,next) => {
-    res.status(200).json({message: "Utilisateur connecté"})
+/**
+ * Login a user
+ * @route POST /api/auth/login
+ * @access Public  
+ */
+exports.login = async (req, res) => {
+    try {
+        const user = await User.findOne({email: req.body.email}) ;
+    
+        if(!user) {
+            return res.status(401).json({message: "Email ou mot de passe incorrect"})
+        }
+
+        const match = await bcrypt.compare(req.body.password, user.password) ;
+
+        if(!match) {
+            return res.status(401).json({message: "Email ou mot de passe incorrect"})
+        }
+        res.status(200).json({
+            userId: user._id,
+            token: jwt.sign(
+                {userId: user._id},
+                process.env.JWT_SECRET,
+                {expiresIn: '24h'}
+            )
+        });               
+        
+    } catch (error) {
+        res.status(500).json({error})
+    }   
 };
