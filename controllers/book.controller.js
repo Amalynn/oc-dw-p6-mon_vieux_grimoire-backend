@@ -33,22 +33,23 @@ exports.getBestRatingBooks = async (req, res) => {
  * @route POST /api/books/
  * @access Private  
  */
-exports.createBook = (req, res) => {
-    console.log(req.body.book);
-    const bookObject = JSON.parse(req.body.book) ;   
-    console.log(bookObject);
-    //delete thingObject._id;
-    delete bookObject._userId;
+exports.createBook = (req, res) => {        
+    const bookObject = JSON.parse(req.body.book);           
+    delete bookObject.userId;
+
     const book = new Book({
     ...bookObject,
-    userId: req.auth.userId,
+    userId: req.auth['userId'],
     imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
-    console.log(book);
-    //thing.save()
-    //.then(() => res.status(201).json({message: 'Objet enregistré !'}))
-    //.catch( error => res.status(400).json({error}));
-    res.status(200).json({message: "Objet crée"});
+
+    book.save()
+        .then(() => {
+            res.status(201).json({message: "Livre ajouté !"})
+        })
+        .catch( error => {
+            res.status(500).json({error})
+        });    
 };
 
 exports.updateBook = (req, res,next) => {
