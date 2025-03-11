@@ -1,4 +1,5 @@
 const Book = require('../models/Book');
+const fs = require('fs');
 
 /**
  * Get a book following a specific ID
@@ -56,9 +57,38 @@ exports.updateBook = (req, res,next) => {
 
 };
 
-exports.deleteBook = (req, res,next) => {
+/**
+ * Delete a book
+ * @route DELETE /api/books/:id
+ * @access Private  
+ */
+exports.deleteBook = async (req, res) => {
+    try {
+        const book = await Book.findById({_id: req.params.id});  
+        
+        if(!book) {
+            return res.status(404).json({message: "Livre non trouvé"});
+        }
 
-};
+        if(book.userId !== req.auth.userId) {
+            return res.status(403).json({message: "Vous n'êtes pas autorisé à supprimé ce livre"});
+        } else {
+            const fileName = book.imageUrl.split('/images/')[1] ;
+            
+            fs.unlink(`images/${fileName}`, () => {
+                Book.deleteOne({_id: req.params.id})
+                    .then( () => {
+                        res.status(200).json({message: "Livre supprimé !"})
+                    })
+                    .catch(error => {
+                        res.status(401).json({error})
+                    });
+            });           
+        }
+    } catch(error) {
+        return res.status(500).json({error})
+    }    
+}; 
 
 exports.createRatingBook = (req, res,next) => {
 
