@@ -53,8 +53,37 @@ exports.createBook = (req, res) => {
         });    
 };
 
-exports.updateBook = (req, res,next) => {
+/**
+ * Update a book
+ * @route PUT /api/books/:id
+ * @access Private  
+ */
+exports.updateBook = async (req, res) => {
+    try {
+        const bookObject = req.file ? {
+            ...JSON.parse(req.body.book),
+            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        } : {...req.body};
 
+        delete bookObject.userId;
+
+        const book = await Book.findById({_id: req.params.id});
+
+        if(!book) {
+            return res.status(404).json({message: "Livre non trouvé"});
+        }
+
+        if(book.userId !== req.auth.userId) {
+            res.status(403).json({message: "Vous n'êtes pas autorisé à modifier ce livre"});
+        } else {
+            Book.updateOne({_id: req.params.id}, {...bookObject, _id: req.params.id})
+                .then(() => res.status(200).json({message: "Livre mis à jour avec succès !"}))
+                .catch(error => res.status(401).json({error}));
+        }
+
+    } catch (error) {
+        return res.status(500).json({error})
+    }
 };
 
 /**
