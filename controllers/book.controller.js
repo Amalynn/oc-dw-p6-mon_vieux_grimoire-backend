@@ -88,10 +88,48 @@ exports.deleteBook = async (req, res) => {
     } catch(error) {
         return res.status(500).json({error})
     }    
-}; 
+};
 
-exports.createRatingBook = (req, res,next) => {
+/**
+ * Note a book
+ * @route POST /api/books/:id/rating
+ * @access Private  
+ */
+exports.createRatingBook = async (req, res, next) => {
+    try {        
+        const existingRating = await Book.findOne({
+            _id: req.params.id,
+            "ratings.userId" : req.auth.userId
+            }
+        );
+        
+        if(existingRating) {
+            return res.status(403).json({message: "Vous avez déjà noté ce livre. Ajout d'une nouvelle note impossible"});
+        }
 
+        if(req.body.grade < 0 || req.body.grade > 5) {
+            return res.status(400).json({message: "La note doit être comprise entre 0 et 5"});
+        }
+
+        const book = await Book.findById({_id: req.params.id});              
+
+        if(!book) {
+            return res.status(404).json({message: "Livre non trouvé"});
+        }        
+        
+        book.ratings.push({
+            userId: req.auth.userId,
+            grade: parseInt(req.body.rating)
+        });
+
+        await book.save();
+
+        req.book = book;
+        next();
+        
+    } catch (error) {
+       return res.status(500).json({error})  
+    }    
 };
 
 /**
