@@ -38,6 +38,10 @@ exports.createBook = (req, res) => {
     const bookObject = JSON.parse(req.body.book);           
     delete bookObject.userId;
 
+    if(!req.file){
+        res.status(400).json({message: "Image introuvable"});
+    }
+
     const book = new Book({
     ...bookObject,
     userId: req.auth['userId'],
@@ -68,6 +72,7 @@ exports.updateBook = async (req, res) => {
         delete bookObject.userId;
 
         const book = await Book.findById({_id: req.params.id});
+        const previousImage = book.imageUrl.split('/images/')[1];                          
 
         if(!book) {
             return res.status(404).json({message: "Livre non trouvé"});
@@ -76,6 +81,13 @@ exports.updateBook = async (req, res) => {
         if(book.userId !== req.auth.userId) {
             res.status(403).json({message: "Vous n'êtes pas autorisé à modifier ce livre"});
         } else {
+            if(req.file) {
+                fs.unlink(`images/${previousImage}`, (err) =>  {
+                    if(err) throw err 
+                    console.log(`L'image ${previousImage} a bien été supprimée`);
+                })                    
+            };
+
             Book.updateOne({_id: req.params.id}, {...bookObject, _id: req.params.id})
                 .then(() => res.status(200).json({message: "Livre mis à jour avec succès !"}))
                 .catch(error => res.status(401).json({error}));

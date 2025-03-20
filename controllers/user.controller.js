@@ -27,8 +27,8 @@ exports.signup = async (req, res) => {
         } 
 
         if (!isValidEmail(email)) {
-                return res.status(400).json({ message: "Format d'email invalide." });
-            }
+            return res.status(400).json({ message: "Format d'email invalide." });
+        }
         
         const hash = await bcrypt.hash(password, 10) ;
 
@@ -68,6 +68,7 @@ exports.login = async (req, res) => {
         if(!match) {
             return res.status(401).json({message: "Email ou mot de passe incorrect"})
         }
+        
         res.status(200).json({
             userId: user._id,
             token: jwt.sign(
