@@ -8,14 +8,24 @@ module.exports = async (req, res, next) => {
             const filenameWithoutSpace = originalname.split(' ').join('_'); 
             const filenameWithoutExtension = path.basename(filenameWithoutSpace, path.extname(filenameWithoutSpace));
             const ref = `${Date.now()}-${filenameWithoutExtension}.webp`;
+            const metadata = await sharp(buffer).metadata();
+            const resizedWidth = 600;            
 
-            await sharp(buffer)
-                .webp({quality: 70})
-                .toFile(`./images/${ref}`);
+            if(metadata.width > 800 ) {
+                await sharp(buffer)
+                    .resize({width: resizedWidth})
+                    .webp({quality: 70})
+                    .toFile(`./images/${ref}`);            
+
+            } else {
+                await sharp(buffer)
+                    .webp({quality: 70})
+                    .toFile(`./images/${ref}`);               
+            } 
             
-            req.file.filename = ref;             
-            
-            next();          
+            req.file.filename = ref; 
+            next();
+                   
         } else {
             next();
         }       
